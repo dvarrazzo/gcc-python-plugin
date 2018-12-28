@@ -31,6 +31,7 @@ fnnames_returning_borrowed_refs = set([
 
 fnnames_setting_exception = set()
 fnnames_setting_exception_on_negative_result = set()
+fnnames_ignore_refcount = set()
 
 # A dictionary mapping from fnname to set of argument indices:
 stolen_refs_by_fnname = {}
@@ -119,3 +120,18 @@ def register_our_attributes():
                            False, False, False,
                            attribute_callback_for_negative_result_sets_exception)
     gcc.define_macro('WITH_CPYCHECKER_NEGATIVE_RESULT_SETS_EXCEPTION_ATTRIBUTE')
+
+    # Handler for __attribute__((cpychecker_ignore_refcount))
+    # and #ifdef WITH_CPYCHECKER_IGNORE_REFCOUNT_ATTRIBUTE
+    def attribute_callback_for_ignore_refcount(*args):
+        if 0:
+            print('attribute_callback_for_ignore_refcount(%r)' % args)
+        check_isinstance(args[0], gcc.FunctionDecl)
+        fnname = args[0].name
+        fnnames_ignore_refcount.add(fnname)
+
+    gcc.register_attribute('cpychecker_ignore_refcount',
+                           0, 0,
+                           False, False, False,
+                           attribute_callback_for_ignore_refcount)
+    gcc.define_macro('WITH_CPYCHECKER_IGNORE_REFCOUNT_ATTRIBUTE')

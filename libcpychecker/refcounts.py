@@ -28,7 +28,7 @@ from gccutils import cfg_to_dot, invoke_dot, get_src_for_loc, check_isinstance
 from libcpychecker.absinterp import *
 from libcpychecker.attributes import fnnames_returning_borrowed_refs, \
     stolen_refs_by_fnname, fnnames_setting_exception, \
-    fnnames_setting_exception_on_negative_result
+    fnnames_setting_exception_on_negative_result, fnnames_ignore_refcount
 from libcpychecker.diagnostics import Reporter, Annotator, Note
 from libcpychecker.PyArg_ParseTuple import PyArgParseFmt, FormatStringWarning,\
     TypeCheckCheckerType, TypeCheckResultType, \
@@ -4370,6 +4370,8 @@ def check_refcounts(fun, dump_traces=False, show_traces=False,
     """
 
     log('check_refcounts(%r, %r, %r)', fun, dump_traces, show_traces)
+    if fun.decl.name in fnnames_ignore_refcount:
+        return
 
     # show_timings = 1
 
