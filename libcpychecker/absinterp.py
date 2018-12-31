@@ -2374,6 +2374,20 @@ class State(object):
             transitions = process_splittable_transitions(transitions,
                                                          handle_negative_return)
 
+        # cpython: handle functions that have been marked as setting the
+        # exception state when they return null:
+        from libcpychecker.attributes import fnnames_setting_exception_on_null_result
+        if fnname in fnnames_setting_exception_on_null_result:
+
+            def handle_null_return(t_iter):
+                check_isinstance(t_iter, Transition)
+                check_isinstance(t_iter.src, State)
+                check_isinstance(stmt, gcc.GimpleCall)
+                # TODO: real check here!
+
+            transitions = process_splittable_transitions(transitions,
+                                                         handle_null_return)
+
         for t_iter in transitions:
             check_isinstance(t_iter, Transition)
             for v_arg in args:

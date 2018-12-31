@@ -28,7 +28,9 @@ from gccutils import cfg_to_dot, invoke_dot, get_src_for_loc, check_isinstance
 from libcpychecker.absinterp import *
 from libcpychecker.attributes import fnnames_returning_borrowed_refs, \
     stolen_refs_by_fnname, fnnames_setting_exception, \
-    fnnames_setting_exception_on_negative_result
+    fnnames_setting_exception_on_negative_result, \
+    fnnames_setting_exception_on_null_result
+
 from libcpychecker.diagnostics import Reporter, Annotator, Note
 from libcpychecker.PyArg_ParseTuple import PyArgParseFmt, FormatStringWarning,\
     TypeCheckCheckerType, TypeCheckResultType, \
@@ -4199,6 +4201,22 @@ def warn_about_NULL_without_exception(v_return,
                        'cpychecker_negative_result_sets_exception))'
                        ' but can return %s without setting an exception'
                        % v_return.value))
+                w.add_trace(trace, ExceptionStateAnnotator())
+
+    # If this is function was marked with our custom
+    #    __attribute__((cpychecker_null_result_sets_exception))
+    # then verify that this is the case:
+    if fun.decl.name in fnnames_setting_exception_on_null_result:
+        if (isinstance(v_return, ConcreteValue)
+            and v_return.value == 0):
+
+            if (isinstance(endstate.cpython.exception_rvalue,
+                          ConcreteValue)
+                and endstate.cpython.exception_rvalue.value == 0):
+
+                w = rep.make_warning(fun,
+                                     endstate.get_gcc_loc(fun),
+                                     'returning NULL without setting an exception')
                 w.add_trace(trace, ExceptionStateAnnotator())
 
 def make_stmt_graph(fun):
